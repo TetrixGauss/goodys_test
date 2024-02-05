@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -8,18 +9,45 @@ import 'package:window_manager/window_manager.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+getJson() async{
+  final appDataPath = Platform.environment['APPDATA']; // Get the AppData path
+  // final appSupportPath = '${Platform.environment['HOME']!}/Library/Application Support';
+
+  // final directory = await getApplicationSupportDirectory();
+  // final jsonFilePath = '${directory.path}/sample1.json';
+  // print('Application Support Path: $directory');
+  final jsonFilePath = '$appDataPath\\sample1.json'; // Replace 'yourfile.json' with your file name
+
+  // final appSupportPath = Directory('/Users/panospavlatos/Library/Application Support');
+  // final jsonFilePath = '${appSupportPath.path}/sample1.json'; // Replace 'sample1.json' with your file name
+
+  final jsonFile = File(jsonFilePath);
+  var value =  await jsonFile.readAsString();
+  Map<String, dynamic> jsonData = jsonDecode(value);
+  bool flag = jsonData['full_screen_mode'] as bool;
+  return flag;
+  // jsonFile.readAsString().then((value) {
+  //   print(value);
+  //   Map<String, dynamic> jsonData = jsonDecode(value);
+  //   print(jsonData);
+  // });
+}
+
 Future<void> main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
-
-  WindowOptions windowOptions = const WindowOptions(
-    size: Size(800, 600),
+bool flag = await getJson();
+log(flag.toString());
+  WindowOptions windowOptions =  WindowOptions(
+    // alwaysOnTop: true,
+    fullScreen: flag,
     center: true,
     backgroundColor: Colors.transparent,
     skipTaskbar: true,
     titleBarStyle: TitleBarStyle.hidden,
     windowButtonVisibility: false,
   );
+  
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
@@ -34,9 +62,11 @@ Future<void> main() async{
 
 
   await launchAtStartup.enable();
-  await launchAtStartup.disable();
+  // await launchAtStartup.disable();
+
   bool isEnabled = await launchAtStartup.isEnabled();
 
+  log(isEnabled.toString());
   runApp(const MyApp());
 }
 
