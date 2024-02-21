@@ -1,24 +1,21 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:ffi';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:launch_at_startup/launch_at_startup.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 // import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:virtual_keyboard_multi_language/virtual_keyboard_multi_language.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:launch_at_startup/launch_at_startup.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 
-getJson() async{
-  try{
+getJson() async {
+  try {
     final appDataPath = Platform.environment['APPDATA']; // Get the AppData path
-    final jsonFilePath =
-        '$appDataPath\\sample1.json'; // Replace 'yourfile.json' with your file name
-
+    final jsonFilePath = '$appDataPath\\sample1.json'; // Replace 'yourfile.json' with your file name
 
     final jsonFile = File(jsonFilePath);
     var value = await jsonFile.readAsString();
@@ -26,7 +23,7 @@ getJson() async{
     return jsonData;
     // bool flag = jsonData['full_screen_mode'] as bool;
     // return flag;
-  } catch(e) {
+  } catch (e) {
     var value = await rootBundle.loadString('assets/json/sample1.json');
     Map<String, dynamic> jsonData = jsonDecode(value);
     return jsonData;
@@ -35,7 +32,7 @@ getJson() async{
   }
 }
 
-Future<void> main() async{
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final appDataPath = Platform.environment['APPDATA'];
   final logsPath = '$appDataPath\\gLOGS.txt';
@@ -48,8 +45,8 @@ Future<void> main() async{
   await file.writeAsString("\nGoodysKIOSK - getJson", mode: FileMode.append);
 
 // log(flag.toString());
-  WindowOptions windowOptions =  WindowOptions(
-    alwaysOnTop: false,//json != null ? json['always_on_top'] ?? false : false,
+  WindowOptions windowOptions = WindowOptions(
+    alwaysOnTop: false, //json != null ? json['always_on_top'] ?? false : false,
     fullScreen: json != null ? json['full_screen_mode'] ?? false : false,
     center: true,
     backgroundColor: Colors.transparent,
@@ -58,15 +55,12 @@ Future<void> main() async{
     windowButtonVisibility: false,
   );
 
- await windowManager.waitUntilReadyToShow(windowOptions, () async {
-
+  await windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
-
   });
   // windowManager.
   await file.writeAsString("\nGoodysKIOSK - waitUntilReadyToShow", mode: FileMode.append);
-
 
   PackageInfo packageInfo = await PackageInfo.fromPlatform();
 
@@ -128,7 +122,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
@@ -181,7 +174,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
     // exit(0);
-    await windowManager.close();
+    await closeApp(context);
   }
 
   String text = '';
@@ -264,7 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _onKeyPress(VirtualKeyboardKey key) {
-    if(controllerText.text.toString() == "12345") {
+    if (controllerText.text.toString() == "12345") {
       exit(0);
       log("DONE");
     }
@@ -274,8 +267,7 @@ class _MyHomePageState extends State<MyHomePage> {
         print('Shift + Q was pressed');
         // Perform your action here
       }
-    }
-    else if (key.keyType == VirtualKeyboardKeyType.Action) {
+    } else if (key.keyType == VirtualKeyboardKeyType.Action) {
       switch (key.action) {
         case VirtualKeyboardKeyAction.Backspace:
           if (text.length == 0) return;
@@ -288,7 +280,6 @@ class _MyHomePageState extends State<MyHomePage> {
         //   text = text + key.text;
         //   break;
         case VirtualKeyboardKeyAction.Shift:
-
           setState(() {
             log('Shift');
             shiftEnabled = !shiftEnabled;
@@ -302,5 +293,19 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     // Update the screen
     setState(() {});
+  }
+
+  void switchToIdleApp() async {
+    const url = 'idle_app://';
+    if (await canLaunchUrlString(url)) {
+      await launchUrlString(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  Future<void> closeApp(BuildContext context) async {
+    switchToIdleApp();
+    await windowManager.close();
   }
 }
